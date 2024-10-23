@@ -1,5 +1,7 @@
 import cv2
+import RPi.GPIO as GPIO
 from datetime import datetime
+import time
 import os
 
 class Camera:
@@ -12,7 +14,7 @@ class Camera:
         ----------
         dev_id : int, optional
             Device ID of the camera, by default 0
-        path : _type_, optional
+        path : str, optional
             Path of the directory to save the picture or video, by default None
         """
         self.cap = cv2.VideoCapture(dev_id)
@@ -32,7 +34,7 @@ class Camera:
             Width of the picture, by default 640
         height : int, optional
             Height of the picture, by default 480
-        file_name : _type_, optional
+        file_name : str, optional
             Name of the picture file, by default None
         """
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
@@ -51,6 +53,23 @@ class Camera:
         return
     
     def capt_video(self, width=640, height=480, rec_sec=5, fps=30, fourcc=('m', 'p', '4', 'v'), file_name=None):
+        """Capture a video from the camera.
+
+        Parameters
+        ----------
+        width : int, optional
+            Width of the video, by default 640
+        height : int, optional
+            Height of the video, by default 480
+        rec_sec : int, optional
+            Duration of the video in seconds, by default 5
+        fps : int, optional
+            Frame per second, by default 30
+        fourcc : tuple, optional
+            FourCC code, by default ('m', 'p', '4', 'v')
+        file_name : str, optional
+            Name of the video file, by default None
+        """
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         self.cap.set(cv2.CAP_PROP_FPS, fps)
@@ -69,3 +88,47 @@ class Camera:
         out.release()
         cv2.destroyAllWindows()
         return
+    
+
+class UltrasonicDistanceSensor:
+    """Ultrasonic distance sensor class to measure distance.
+    """
+    def __init__(self, trig, echo):
+        """Initialize the ultrasonic distance sensor object.
+
+        Parameters
+        ----------
+        trig : int
+            GPIO pin number for the trigger
+        echo : int
+            GPIO pin number for the echo
+        """
+        self.trig = trig
+        self.echo = echo
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.trig, GPIO.OUT)
+        GPIO.setup(self.echo, GPIO.IN)
+    
+    def read_distance(self):
+        """Read the distance from the ultrasonic distance sensor.
+
+        Returns
+        -------
+        float
+            Distance in cm
+        """
+        GPIO.output(self.trig, GPIO.HIGH)
+        time.sleep(0.00001)
+        GPIO.output(self.trig, GPIO.LOW)
+        while GPIO.input(self.echo) == GPIO.LOW:
+            sig_off = time.time()
+        while GPIO.input(self.echo) == GPIO.HIGH:
+            sig_on = time.time()
+        duration = sig_off - sig_on
+        distance = duration * 17000
+        return distance
+    
+    def __del__(self):
+        GPIO.cleanup()
+        return
+    
