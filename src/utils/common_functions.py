@@ -90,7 +90,7 @@ class Camera:
         return
     
 
-class UltrasonicDistanceSensor:
+class UltrasonicSensor:
     """Ultrasonic distance sensor class to measure distance.
     """
     def __init__(self, trig, echo):
