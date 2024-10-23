@@ -93,15 +93,15 @@ class Camera:
 class UltrasonicSensor:
     """Ultrasonic distance sensor class to measure distance.
     """
-    def __init__(self, trig, echo):
-        """Initialize the ultrasonic distance sensor object.
+    def __init__(self, trig=27, echo=18):
+        """Initialize the ultrasonic distance sensor.
 
         Parameters
         ----------
-        trig : int
-            GPIO pin number for the trigger
-        echo : int
-            GPIO pin number for the echo
+        trig : int, optional
+            GPIO pin number for the trigger, by default 27
+        echo : int, optional
+            GPIO pin number for the echo, by default 18
         """
         self.trig = trig
         self.echo = echo
