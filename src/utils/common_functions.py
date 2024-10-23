@@ -131,4 +131,27 @@ class UltrasonicSensor:
     def __del__(self):
         GPIO.cleanup()
         return
+
+
+class MotionSensor:
+    def __init__(self, pin=14):
+        """Initialize the motion sensor.
+
+        Parameters
+        ----------
+        pin : int, optional
+            GPIO pin number for the motion sensor, by default 14
+        """
+        self.pin = pin
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.pin, GPIO.IN)
+
+    def detect_human(self):
+        return GPIO.input(self.pin) == GPIO.HIGH
     
+    def __del__(self):
+        """Clean up the GPIO pins.
+        """
+        GPIO.cleanup()
+
+       
