@@ -135,6 +135,8 @@ class UltrasonicSensor:
         return distance
     
     def __del__(self):
+        """Clean up the GPIO pins.
+        """
         GPIO.cleanup()
 
 
