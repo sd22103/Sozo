@@ -1,5 +1,7 @@
 import cv2
 import RPi.GPIO as GPIO
+from gpiozero import OutputDevice
+from gpiozero.pins.pigpio import PiGPIOFactory
 from datetime import datetime
 import time
 import os
@@ -161,4 +163,106 @@ class MotionSensor:
         """
         GPIO.cleanup()
 
-       
+
+class Stepper():
+    """Stepper motor class to control the stepper motor.
+    """
+    def __init__(self, number_of_steps, mpins=[21, 17, 27, 22], method_step="half"):
+        """Initialize the stepper motor.
+
+        Parameters
+        ----------
+        number_of_steps : int
+            Number of steps per revolution 
+        mpins : list, optional
+            List of GPIO pin numbers for the motor, by default [21, 17, 27, 22]
+        method_step : str, optional
+            Method of stepping, by default "half"
+        """
+        self.step_number = 0
+        self.direction = 0
+        self.last_step_time = 0
+        self.number_of_steps = number_of_steps
+        self._method_step = method_step
+        if method_step == "full":
+            self._vlist = [[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1], [1, 0, 0, 1], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1], [1, 0, 0, 1]]
+        elif method_step == "wave":
+            self._vlist = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+        else:
+            self._vlist = [[1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 0, 1], [1, 0, 0, 1]]
+            self._method_step = "half"
+        factory = PiGPIOFactory()
+        self.mpins = [OutputDevice(pin, pin_factory=factory) for pin in mpins]
+        self.set_speed()
+
+    def set_speed(self, what_speed=10):
+        """Set the speed of the stepper motor.
+
+        Parameters
+        ----------
+        what_speed : int, optional
+            Speed of the motor, by default 10
+        """
+        self.step_delay = 60.0 * 1000 * 1000 * 1000 / self.number_of_steps / what_speed
+        return
+    
+    def step(self, steps_to_move, auto_stop=True):
+        """Move the stepper motor.
+
+        Parameters
+        ----------
+        steps_to_move : int
+            Number of steps to move
+        auto_stop : bool, optional
+            Stop the motor after moving, by default True
+        """
+        if self._method_step == "half":
+            steps_to_move *= 2
+        steps_left = abs(steps_to_move)
+        self.direction = 1 if steps_to_move > 0 else 0
+        while steps_left > 0:
+            now = time.time_ns()
+            if (now - self.last_step_time) >= self.step_delay:
+                self.last_step_time = now
+                if self.direction == 1:
+                    self.step_number += 1
+                    if self.step_number == self.number_of_steps:
+                        self.step_number = 0
+                else:
+                    if self.step_number == 0:
+                        self.step_number = self.number_of_steps
+                    self.step_number -= 1
+                steps_left -= 1
+                self._step_motor(self.step_number % 8)
+        if auto_stop:
+            self.stop()
+        return
+    
+    def _step_motor(self, this_step):
+        """Step the motor.
+
+        Parameters
+        ----------
+        this_step : int
+            Step number
+        """
+        for val, mpin in zip(self._vlist[this_step], self.mpins):
+            mpin.on() if val else mpin.off()
+        return
+    
+    def stop(self):
+        """Stop the motor.
+        """
+        for mpin in self.mpins:
+            mpin.off()
+        return
+    
+    def __del__(self):
+        """Stop the motor and clean up the GPIO pins.
+        """
+        self.stop()
+        for mpin in self.mpins:
+            mpin.close()
+        return
+    
+    
