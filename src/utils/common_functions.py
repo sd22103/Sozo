@@ -89,6 +89,12 @@ class Camera:
         cv2.destroyAllWindows()
         return
     
+    def __del__(self):
+        """Release the camera and close the window.
+        """
+        self.cap.release()
+        cv2.destroyAllWindows()
+    
 
 class UltrasonicSensor:
     """Ultrasonic distance sensor class to measure distance.
@@ -130,7 +136,6 @@ class UltrasonicSensor:
     
     def __del__(self):
         GPIO.cleanup()
-        return
 
 
 class MotionSensor:
