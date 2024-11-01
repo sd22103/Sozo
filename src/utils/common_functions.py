@@ -291,39 +291,39 @@ class LCD:
         self.lcd_init()
 
     def lcd_init(self):
-        self.lcd_send(0x33, 0)
+        self.send(0x33, 0)
         time.sleep(0.005)
-        self.lcd_send(0x32, 0)
+        self.send(0x32, 0)
         time.sleep(0.005)
-        self.lcd_send(0x28, 0)
+        self.send(0x28, 0)
         time.sleep(0.00015)
-        self.lcd_send(LCD.DISPLAY_OFF, 0)
+        self.send(LCD.DISPLAY_OFF, 0)
         time.sleep(0.00015)
-        self.lcd_send(LCD.CLEAR_DISPLAY, 0)
+        self.send(LCD.CLEAR_DISPLAY, 0)
         time.sleep(0.002)
-        self.lcd_send(LCD.ENTRY_MODE, 0)
+        self.send(LCD.ENTRY_MODE, 0)
         time.sleep(0.00015)
-        self.lcd_send(LCD.DISPLAY_ON, 0)
+        self.send(LCD.DISPLAY_ON, 0)
         time.sleep(0.00015)
 
-    def lcd_send(self, data, mode):
+    def send(self, data, mode):
         high = mode | (data & 0xF0) | LCD.BACKLIGHT
         low = mode | ((data << 4) & 0xF0) | LCD.BACKLIGHT
         self.bus.write_byte(self.ip, high)
-        self.lcd_toggle_enable(high)
+        self.toggle_enable(high)
         self.bus.write_byte(self.ip, low)
-        self.lcd_toggle_enable(low)
+        self.toggle_enable(low)
 
-    def lcd_toggle_enable(self, value):
+    def toggle_enable(self, value):
         self.bus.write_byte(LCD.ADDR, (value | self.en))
         time.sleep(0.0005)
         self.bus.write_byte(LCD.ADDR, (value & ~self.en))
         time.sleep(0.0005)
 
-    def lcd_set_cursor(self, col, row):
+    def set_cursor(self, col, row):
         addr = LCD.SET_DDRAM | (col + (0x40 * row))
-        self.lcd_send(addr, 0)
+        self.send(addr, 0)
 
-    def lcd_print(self, text):
+    def print_text(self, text):
         for char in text:
-            self.lcd_send(ord(char), 1)
+            self.send(ord(char), 1)
