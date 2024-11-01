@@ -309,9 +309,9 @@ class LCD:
     def send(self, data, mode):
         high = mode | (data & 0xF0) | LCD.BACKLIGHT
         low = mode | ((data << 4) & 0xF0) | LCD.BACKLIGHT
-        self.bus.write_byte(self.ip, high)
+        self.bus.write_byte(LCD.ADDR, high)
         self.toggle_enable(high)
-        self.bus.write_byte(self.ip, low)
+        self.bus.write_byte(LCD.ADDR, low)
         self.toggle_enable(low)
 
     def toggle_enable(self, value):
