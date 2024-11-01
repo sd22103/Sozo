@@ -266,3 +266,64 @@ class Stepper():
         return
     
     
+class LCD:
+    """LCD class to control the LCD display.
+    """
+    ADDR = 0x27  # LCDのI2Cアドレス
+    WIDTH = 16  # LCDの文字数
+    BACKLIGHT = 0x08  # バックライトの設定
+
+    # HD44780コマンド
+    CLEAR_DISPLAY = 0x01
+    RETURN_HOME = 0x02
+    ENTRY_MODE = 0x06
+    DISPLAY_ON = 0x0C
+    DISPLAY_OFF = 0x08
+    CURSOR_ON = 0x0E
+    BLINK_ON = 0x0F
+    SET_DDRAM = 0x80
+
+    def __init__(self, bus, rs=0x01, rw=0x02, en=0x04):
+        self.bus = bus
+        self.rs = rs
+        self.rw = rw
+        self.en = en
+        self.lcd_init()
+
+    def lcd_init(self):
+        self.lcd_send(0x33, 0)
+        time.sleep(0.005)
+        self.lcd_send(0x32, 0)
+        time.sleep(0.005)
+        self.lcd_send(0x28, 0)
+        time.sleep(0.00015)
+        self.lcd_send(LCD.DISPLAY_OFF, 0)
+        time.sleep(0.00015)
+        self.lcd_send(LCD.CLEAR_DISPLAY, 0)
+        time.sleep(0.002)
+        self.lcd_send(LCD.ENTRY_MODE, 0)
+        time.sleep(0.00015)
+        self.lcd_send(LCD.DISPLAY_ON, 0)
+        time.sleep(0.00015)
+
+    def lcd_send(self, data, mode):
+        high = mode | (data & 0xF0) | LCD.BACKLIGHT
+        low = mode | ((data << 4) & 0xF0) | LCD.BACKLIGHT
+        self.bus.write_byte(self.ip, high)
+        self.lcd_toggle_enable(high)
+        self.bus.write_byte(self.ip, low)
+        self.lcd_toggle_enable(low)
+
+    def lcd_toggle_enable(self, value):
+        self.bus.write_byte(LCD.ADDR, (value | self.en))
+        time.sleep(0.0005)
+        self.bus.write_byte(LCD.ADDR, (value & ~self.en))
+        time.sleep(0.0005)
+
+    def lcd_set_cursor(self, col, row):
+        addr = LCD.SET_DDRAM | (col + (0x40 * row))
+        self.lcd_send(addr, 0)
+
+    def lcd_print(self, text):
+        for char in text:
+            self.lcd_send(ord(char), 1)
