@@ -7,6 +7,7 @@ import time
 import os
 from pydub import AudioSegment
 from pydub.playback import play
+import pigpio
 
 class Camera():
     """Camera class to capture picture or video.
@@ -365,3 +366,38 @@ class Speaker():
         play(sound)
         return
     
+
+class ServoMotor():
+    """Servo motor class to control the servo motor.
+    """
+
+    def __init__(self, pin=18):
+        """Initialize the servo motor.
+
+        Parameters
+        ----------
+        pin : int, optional
+            GPIO pin number for the servo motor, by default 18
+        """
+        self.pin = pin
+        self.pi = pigpio.pi()
+        
+    def set_angle(self, angle):
+        """Set the angle of the servo motor.
+
+        Parameters
+        ----------
+        angle : int
+            Angle of the servo motor
+        """
+        assert 0 <= angle <= 180, 'Angle must be between 0 and 180.'
+        pulse_width = (angle / 180) * (2500 - 500) + 500
+        self.pi.set_servo_pulsewidth(self.pin, pulse_width)
+
+    def __del__(self):
+        """Stop the servo motor and clean up the GPIO pins.
+        """
+        self.pi.set_servo_pulsewidth(self.pin, 0)
+        self.pi.stop()
+        return
+
