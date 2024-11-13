@@ -6,9 +6,10 @@ from datetime import datetime
 import time
 import os
 
-class Camera:
+class Camera():
     """Camera class to capture picture or video.
     """
+
     def __init__(self, dev_id=0, path=None):
         """Initialize the camera object.
 
@@ -25,7 +26,6 @@ class Camera:
             self.path = os.getcwd()
         if not self.cap.isOpened():
             print('Failed to open camera.')
-        
 
     def capt_picture(self, width=640, height=480, file_name=None):
         """Capture a picture from the camera.
@@ -98,9 +98,10 @@ class Camera:
         cv2.destroyAllWindows()
     
 
-class UltrasonicSensor:
+class UltrasonicSensor():
     """Ultrasonic distance sensor class to measure distance.
     """
+
     def __init__(self, trig=27, echo=18):
         """Initialize the ultrasonic distance sensor.
 
@@ -142,7 +143,10 @@ class UltrasonicSensor:
         GPIO.cleanup()
 
 
-class MotionSensor:
+class MotionSensor():
+    """Motion sensor class to detect human motion.
+    """
+    
     def __init__(self, pin=14):
         """Initialize the motion sensor.
 
@@ -167,6 +171,7 @@ class MotionSensor:
 class Stepper():
     """Stepper motor class to control the stepper motor.
     """
+
     def __init__(self, number_of_steps, mpins=[21, 17, 27, 22], method_step="half"):
         """Initialize the stepper motor.
 
@@ -266,13 +271,13 @@ class Stepper():
         return
     
     
-class LCD:
+class LCD():
     """LCD class to control the LCD display.
     """
+
     ADDR = 0x27  # LCDのI2Cアドレス
     WIDTH = 16  # LCDの文字数
     BACKLIGHT = 0x08  # バックライトの設定
-
     # HD44780コマンド
     CLEAR_DISPLAY = 0x01
     RETURN_HOME = 0x02
@@ -327,3 +332,4 @@ class LCD:
     def print_text(self, text):
         for char in text:
             self.send(ord(char), 1)
+
