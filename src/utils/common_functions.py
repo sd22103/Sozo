@@ -5,6 +5,8 @@ from gpiozero.pins.pigpio import PiGPIOFactory
 from datetime import datetime
 import time
 import os
+from pydub import AudioSegment
+from pydub.playback import play
 
 class Camera():
     """Camera class to capture picture or video.
@@ -146,7 +148,7 @@ class UltrasonicSensor():
 class MotionSensor():
     """Motion sensor class to detect human motion.
     """
-    
+
     def __init__(self, pin=14):
         """Initialize the motion sensor.
 
@@ -333,3 +335,33 @@ class LCD():
         for char in text:
             self.send(ord(char), 1)
 
+
+class Speaker():
+    """Speaker class to play audio.
+    """
+
+    def __init__(self, path=None):
+        """Initialize the speaker object.
+
+        Parameters
+        ----------
+        path : str, optional
+            Path of the audio file, by default None
+        """
+        self.path = path
+        if path is None:
+            print('Path is not provided.')
+    
+    def play_audio(self, file_name):
+        """Play the audio file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the audio file
+        """
+        path = os.path.join(self.path, file_name)
+        sound = AudioSegment.from_file(path)
+        play(sound)
+        return
+    
