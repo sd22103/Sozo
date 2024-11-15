@@ -5,10 +5,14 @@ from gpiozero.pins.pigpio import PiGPIOFactory
 from datetime import datetime
 import time
 import os
+from pydub import AudioSegment
+from pydub.playback import play
+import pigpio
 
-class Camera:
+class Camera():
     """Camera class to capture picture or video.
     """
+
     def __init__(self, dev_id=0, path=None):
         """Initialize the camera object.
 
@@ -25,7 +29,6 @@ class Camera:
             self.path = os.getcwd()
         if not self.cap.isOpened():
             print('Failed to open camera.')
-        
 
     def capt_picture(self, width=640, height=480, file_name=None):
         """Capture a picture from the camera.
@@ -98,9 +101,10 @@ class Camera:
         cv2.destroyAllWindows()
     
 
-class UltrasonicSensor:
+class UltrasonicSensor():
     """Ultrasonic distance sensor class to measure distance.
     """
+
     def __init__(self, trig=27, echo=18):
         """Initialize the ultrasonic distance sensor.
 
@@ -142,7 +146,10 @@ class UltrasonicSensor:
         GPIO.cleanup()
 
 
-class MotionSensor:
+class MotionSensor():
+    """Motion sensor class to detect human motion.
+    """
+
     def __init__(self, pin=14):
         """Initialize the motion sensor.
 
@@ -167,6 +174,7 @@ class MotionSensor:
 class Stepper():
     """Stepper motor class to control the stepper motor.
     """
+
     def __init__(self, number_of_steps, mpins=[21, 17, 27, 22], method_step="half"):
         """Initialize the stepper motor.
 
@@ -266,3 +274,130 @@ class Stepper():
         return
     
     
+class LCD():
+    """LCD class to control the LCD display.
+    """
+
+    ADDR = 0x27  # LCDのI2Cアドレス
+    WIDTH = 16  # LCDの文字数
+    BACKLIGHT = 0x08  # バックライトの設定
+    # HD44780コマンド
+    CLEAR_DISPLAY = 0x01
+    RETURN_HOME = 0x02
+    ENTRY_MODE = 0x06
+    DISPLAY_ON = 0x0C
+    DISPLAY_OFF = 0x08
+    CURSOR_ON = 0x0E
+    BLINK_ON = 0x0F
+    SET_DDRAM = 0x80
+
+    def __init__(self, bus, rs=0x01, rw=0x02, en=0x04):
+        self.bus = bus
+        self.rs = rs
+        self.rw = rw
+        self.en = en
+        self.lcd_init()
+
+    def lcd_init(self):
+        self.send(0x33, 0)
+        time.sleep(0.005)
+        self.send(0x32, 0)
+        time.sleep(0.005)
+        self.send(0x28, 0)
+        time.sleep(0.00015)
+        self.send(LCD.DISPLAY_OFF, 0)
+        time.sleep(0.00015)
+        self.send(LCD.CLEAR_DISPLAY, 0)
+        time.sleep(0.002)
+        self.send(LCD.ENTRY_MODE, 0)
+        time.sleep(0.00015)
+        self.send(LCD.DISPLAY_ON, 0)
+        time.sleep(0.00015)
+
+    def send(self, data, mode):
+        high = mode | (data & 0xF0) | LCD.BACKLIGHT
+        low = mode | ((data << 4) & 0xF0) | LCD.BACKLIGHT
+        self.bus.write_byte(LCD.ADDR, high)
+        self.toggle_enable(high)
+        self.bus.write_byte(LCD.ADDR, low)
+        self.toggle_enable(low)
+
+    def toggle_enable(self, value):
+        self.bus.write_byte(LCD.ADDR, (value | self.en))
+        time.sleep(0.0005)
+        self.bus.write_byte(LCD.ADDR, (value & ~self.en))
+        time.sleep(0.0005)
+
+    def set_cursor(self, col, row):
+        addr = LCD.SET_DDRAM | (col + (0x40 * row))
+        self.send(addr, 0)
+
+    def print_text(self, text):
+        for char in text:
+            self.send(ord(char), 1)
+
+
+class Speaker():
+    """Speaker class to play audio.
+    """
+
+    def __init__(self, path=None):
+        """Initialize the speaker object.
+
+        Parameters
+        ----------
+        path : str, optional
+            Path of the audio file, by default None
+        """
+        self.path = path
+        if path is None:
+            print('Path is not provided.')
+    
+    def play_audio(self, file_name):
+        """Play the audio file.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the audio file
+        """
+        path = os.path.join(self.path, file_name)
+        sound = AudioSegment.from_file(path)
+        play(sound)
+        return
+    
+
+class ServoMotor():
+    """Servo motor class to control the servo motor.
+    """
+
+    def __init__(self, pin=18):
+        """Initialize the servo motor.
+
+        Parameters
+        ----------
+        pin : int, optional
+            GPIO pin number for the servo motor, by default 18
+        """
+        self.pin = pin
+        self.pi = pigpio.pi()
+        
+    def set_angle(self, angle):
+        """Set the angle of the servo motor.
+
+        Parameters
+        ----------
+        angle : int
+            Angle of the servo motor
+        """
+        assert 0 <= angle <= 180, 'Angle must be between 0 and 180.'
+        pulse_width = (angle / 180) * (2500 - 500) + 500
+        self.pi.set_servo_pulsewidth(self.pin, pulse_width)
+
+    def __del__(self):
+        """Stop the servo motor and clean up the GPIO pins.
+        """
+        self.pi.set_servo_pulsewidth(self.pin, 0)
+        self.pi.stop()
+        return
+
