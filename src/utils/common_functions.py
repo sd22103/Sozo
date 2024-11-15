@@ -47,7 +47,8 @@ class Camera():
         ret, frame = self.cap.read()
         if ret:
             if file_name is None:
-                file_name = datetime.now().strftime('%Y%m%d%H%M%S') + '.jpg'
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                return frame
             path = os.path.join(self.path, file_name)
             cv2.imwrite(path, frame)
         else:
