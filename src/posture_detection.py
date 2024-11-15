@@ -1,94 +1,119 @@
-
-import torch
-import PIL
-from PIL import Image
-import torchvision
-from torchvision import transforms
+import tensorflow as tf
+import tensorflow_hub as hub
+from tensorflow_docs.vis import embed
+import numpy as np
 import cv2
-import matplotlib.pyplot as plt
 
-class PoseEstimation:
-    """Posture Detection class for detecting human pose from image using pretrained model.
+# Import matplotlib libraries
+from matplotlib import pyplot as plt
+from matplotlib.collections import LineCollection
+import matplotlib.patches as patches
+
+# Some modules to display an animation using imageio.
+import imageio
+from IPython.display import HTML, display
+
+model_name = "movenet_lightning_int8"
+
+if "tflite" in model_name:
+  if "movenet_lightning_f16" in model_name:
+    # !wget -q -O model.tflite https://tfhub.dev/google/lite-model/movenet/singlepose/lightning/tflite/float16/4?lite-format=tflite
+    input_size = 192
+  elif "movenet_thunder_f16" in model_name:
+    # !wget -q -O model.tflite https://tfhub.dev/google/lite-model/movenet/singlepose/thunder/tflite/float16/4?lite-format=tflite
+    input_size = 256
+  elif "movenet_lightning_int8" in model_name:
+    # !wget -q -O model.tflite https://tfhub.dev/google/lite-model/movenet/singlepose/lightning/tflite/int8/4?lite-format=tflite
+    input_size = 192
+  elif "movenet_thunder_int8" in model_name:
+    # !wget -q -O model.tflite https://tfhub.dev/google/lite-model/movenet/singlepose/thunder/tflite/int8/4?lite-format=tflite
+    input_size = 256
+  else:
+    raise ValueError("Unsupported model name: %s" % model_name)
+
+  # Initialize the TFLite interpreter
+  interpreter = tf.lite.Interpreter(model_path="model.tflite")
+  interpreter.allocate_tensors()
+
+  def movenet(input_image):
+    """Runs detection on an input image.
+
+    Args:
+      input_image: A [1, height, width, 3] tensor represents the input image
+        pixels. Note that the height/width should already be resized and match the
+        expected input resolution of the model before passing into this function.
+
+    Returns:
+      A [1, 1, 17, 3] float numpy array representing the predicted keypoint
+      coordinates and scores.
     """
-    def __init__(self, img_path, model, device='cpu'):
-        """Initialize the class with image path, model and device.
+    # TF Lite format expects tensor type of uint8.
+    input_image = tf.cast(input_image, dtype=tf.uint8)
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+    interpreter.set_tensor(input_details[0]['index'], input_image.numpy())
+    # Invoke inference.
+    interpreter.invoke()
+    # Get the model prediction.
+    keypoints_with_scores = interpreter.get_tensor(output_details[0]['index'])
+    return keypoints_with_scores
 
-        Parameters
-        ----------
-        img_path : str
-            Path of the image file.
-        model : torch model
-            Pretrained model for detecting human pose
-        device : str, optional
-            Device to use for processing the image and model, by default 'cpu'
-        """
-        self.frame_raw = cv2.imread(img_path)
-        self.frame = cv2.cvtColor(self.frame_raw, cv2.COLOR_BGR2RGB)
-        self.image = Image.fromarray(self.frame)
-        self.model = model
-        self.device = device
+else:
+  if "movenet_lightning" in model_name:
+    module = hub.load("https://tfhub.dev/google/movenet/singlepose/lightning/4")
+    input_size = 192
+  elif "movenet_thunder" in model_name:
+    module = hub.load("https://tfhub.dev/google/movenet/singlepose/thunder/4")
+    input_size = 256
+  else:
+    raise ValueError("Unsupported model name: %s" % model_name)
 
-    def detect(self, save=False, save_path=None):
-        """Detect human pose from the image.
+  def movenet(input_image):
+    """Runs detection on an input image.
 
-        Parameters
-        ----------
-        save : bool, optional
-            Save the image with detected pose, by default False
-        save_path : str, optional
-            Path to save the image, by default None
-        """
-        with torch.no_grad():
-            transform = transforms.Compose([transforms.ToTensor()])
-            inputs = transform(self.image).unsqueeze(0).to(self.device)
-            self.model.eval()
-            outputs = self.model(inputs)
-            key_point = []
-            for i in range(len(outputs[0]['boxes'])):
-                if outputs[0]['scores'][i] > 0.9:
-                    x0 = int(outputs[0]['boxes'][i][0])
-                    y0 = int(outputs[0]['boxes'][i][1])
-                    x1 = int(outputs[0]['boxes'][i][2])
-                    y1 = int(outputs[0]['boxes'][i][3])
-                    bbox = cv2.rectangle(self.frame, (x0, y0), (x1, y1), (0, 0, 300), 3, 4)
-                    x, y = [], []
-                    for j in range(len(outputs[0]['keypoints'][0])):
-                        kp_x = int(outputs[0]['keypoints'][i][j][0])
-                        kp_y = int(outputs[0]['keypoints'][i][j][1])
-                        x.append(kp_x)
-                        y.append(kp_y)
-                        bbox = cv2.circle(self.frame_raw, (kp_x, kp_y), 2, (50, 300, 0), 3, 4)
-                    key_point.append((x, y))
-            for a in key_point:
-                x = a[0]
-                y = a[1]
-                bbox = cv2.line(self.frame_raw, (x[5], y[5]), (x[6], y[6]), (300, 0, 0), 5) # left shoulder to right shoulder
-                bbox = cv2.line(self.frame_raw, (x[5], y[5]), (x[7], y[7]), (300, 0, 0), 5) # left shoulder to left elbow
-                bbox = cv2.line(self.frame_raw, (x[6], y[6]), (x[8], y[8]), (300, 0, 0), 5) # right shoulder to right elbow
-                bbox = cv2.line(self.frame_raw, (x[7], y[7]), (x[9], y[9]), (300, 0, 0), 5) # left elbow to left wrist
-                bbox = cv2.line(self.frame_raw, (x[8], y[8]), (x[10], y[10]), (300, 0, 0), 5) # right elbow to right wrist
-            
-            if save:
-                self.show(bbox, save=True, save_path=save_path)
-            else:
-                self.show(bbox)
+    Args:
+      input_image: A [1, height, width, 3] tensor represents the input image
+        pixels. Note that the height/width should already be resized and match the
+        expected input resolution of the model before passing into this function.
+
+    Returns:
+      A [1, 1, 17, 3] float numpy array representing the predicted keypoint
+      coordinates and scores.
+    """
+    model = module.signatures['serving_default']
+
+    # SavedModel format expects tensor type of int32.
+    input_image = tf.cast(input_image, dtype=tf.int32)
+    # Run model inference.
+    outputs = model(input_image)
+    # Output is a [1, 1, 17, 3] tensor.
+    keypoints_with_scores = outputs['output_0'].numpy()
+    return keypoints_with_scores
+
+def detect(image_path=None, output_path=None):
+    # 入力画像を読み込む。
+    if image_path:
+        image = tf.io.read_file(image_path)
+        image = tf.image.decode_jpeg(image)
+    # Resize and pad the image to keep the aspect ratio and fit the expected size.
+    input_image = tf.expand_dims(image, axis=0)
+    input_image = tf.image.resize_with_pad(input_image, input_size, input_size)
+
+    # Run model inference.
+    keypoints_with_scores = movenet(input_image)
+
+    # Visualize the predictions with image.
+    display_image = tf.expand_dims(image, axis=0)
+    display_image = tf.cast(tf.image.resize_with_pad(
+        display_image, 1280, 1280), dtype=tf.int32)
+    output_overlay = draw_prediction_on_image(
+        np.squeeze(display_image.numpy(), axis=0), keypoints_with_scores)
     
-    def show(self, bbox, save=False, save_path=None):
-        """Display the image with detected pose.
-
-        Parameters
-        ----------
-        bbox : cv2 image
-            Image with detected pose
-        save : bool, optional
-            Save the image, by default False
-        save_path : str, optional
-            Path to save the image, by default None
-        """
-        plt.figure(figsize=(12, 9))
-        plt.imshow(cv2.cvtColor(bbox, cv2.COLOR_BGR2RGB))
-        plt.axis('off')
-        if save:
-            plt.savefig(save_path)
-        plt.show()
+    if output_path:
+        plt.figure(figsize=(5, 5))
+        plt.imshow(output_overlay)
+        _ = plt.axis('off')
+        plt.savefig(output_path, bbox_inches='tight', pad_inches=0)
         plt.close()
+
+detect('./input_image.jpeg', './output_overlay.png')
