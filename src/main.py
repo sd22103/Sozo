@@ -70,6 +70,7 @@ def main():
                             right_arm_motor.run_for_rotations(3, -100)
                             right_arm_motor.run_for_rotations(2.5, 100)
                         continual_bad_posture_flag = 0
+                        caterpillar_motor.run_for_seconds(run_time_start-run_time_end, CATERPILLAR_SPEED)
                         continue
                     continue
                 continue
