@@ -1,10 +1,9 @@
 import os
-import time
 
 class LED():
     """LED control class
     """
-    def __init__(self, hub_num=1, port_num=2):
+    def __init__(self, hub_num=2, port_num=2):
         """Constructor
 
         Parameters
@@ -21,20 +20,24 @@ class LED():
     def on(self):
         """Turn on the LED
         """
-        os.system(f"sudo hub-ctrl -h {self.hub_num} -P {self.port_num} -p 1")
+        os.system(f"sudo uhubctl -l {self.hub_num} -p {self.port_num} -a on")
         return
 
     def off(self):
         """Turn off the LED
         """
-        os.system(f"sudo hub-ctrl -h {self.hub_num} -P {self.port_num} -p 0")
+        os.system(f"sudo uhubctl -l {self.hub_num} -p {self.port_num} -a off")
         return
 
-    def blink(self):
+    def blink(self, t=5):
         """Blink the LED
+
+        Parameters
+        ----------
+        t : int, optional
+            number of times to blink, by default 5
         """
-        self.on()
-        time.sleep(0.5)
-        self.off()
-        time.sleep(0.5)
+        for i in range(t):
+            self.on()
+            self.off()
         return
