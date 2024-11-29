@@ -8,6 +8,8 @@ import os
 from pydub import AudioSegment
 from pydub.playback import play
 import pigpio
+import json
+from attrdict import AttrDict
 
 class Camera():
     """Camera class to capture picture or video.
@@ -402,3 +404,19 @@ class ServoMotor():
         self.pi.stop()
         return
 
+def input_json(file_path):
+    """Read a JSON
+
+    Parameters
+    ----------
+    file_path : str
+        Path of the JSON file
+
+    Returns
+    -------
+    AttrDict
+        JSON data as an AttrDict object
+    """
+    with open(file_path, 'r') as f:
+        data = json.load(f)
+    return AttrDict(data)
