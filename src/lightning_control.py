@@ -1,5 +1,5 @@
 import os
-
+import RPi.GPIO as GPIO
 class LED():
     """LED control class
     """
@@ -15,7 +15,7 @@ class LED():
         """
         self.hub_num = hub_num
         self.port_num = port_num
-        pass
+        return
 
     def on(self):
         """Turn on the LED
@@ -40,4 +40,39 @@ class LED():
         for i in range(t):
             self.on()
             self.off()
+        return
+    
+
+class OrganicEL():
+    """Organic EL control class
+    """
+    def __init__(self, pin=2):
+        """Constructor
+
+        Parameters
+        ----------
+        pin : int, optional
+            GPIO pin number, by default 2
+        """
+        self.pin = pin
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.pin, GPIO.OUT)
+        return
+    
+    def on(self):
+        """Turn on the Organic EL
+        """
+        GPIO.output(self.pin, GPIO.HIGH)
+        return
+    
+    def off(self):
+        """Turn off the Organic EL
+        """
+        GPIO.output(self.pin, GPIO.LOW)
+        return
+    
+    def __del__(self):
+        """Destructor
+        """
+        GPIO.cleanup()
         return
