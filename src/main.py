@@ -1,32 +1,14 @@
 from lightning_control import LED, OrganicEL
 from posture_detection import detect
 from snack_delivery import Delivery
-from utils.common_functions import MotionSensor, Speaker, UltrasonicSensor
+from utils.common_functions import MotionSensor, Speaker, UltrasonicSensor, input_json
 from buildhat import Motor
 import time
 import random
 import traceback
 
-AUDIO_PATH = "../audio/"
-MOVE_AUDIO_FILE = "move.wav"
-BACK_AUDIO_FILE = "back.wav"
-POSTURE_ALERT_AUDIO_FILE = "posture_alert.wav"
-TREAT_AUDIO_FILE = "treat.wav"
-ITEM_GET_AUDIO_FILE = "item_get.mp3"
-RIGHT_ARM_PORT = "A"
-CATERPILLAR_PORT = "B"
-LEFT_SHOULDER_X_LIMIT = 0.95
-LEFT_SHOULDER_Y_LIMIT = 0.05
-RIGHT_SHOULDER_X_LIMIT = 0.05
-RIGHT_SHOULDER_Y_LIMIT = 0.95
-LEFT_ETE_Y_LIMIT = 0.15
-RIGHT_ETE_Y_LIMIT = 0.4
-CATERPILLAR_BACK_ROTATION = 1
-CATERPILLAR_SPEED = 100
-BAD_POSTURE_LIMIT = 3
-PUNCH_DISTANCE = 30
-PUNCH_TIME = 3
-DELIVERY_INTERVAL = 40 * 60
+SETTING = input_json("../config/setting.json")
+CONST, PINS = SETTING.constants, SETTING.pins
 
 
 def main():
@@ -34,14 +16,14 @@ def main():
         # 初期化
         print("初期化開始")
         led = LED()
-        organic_el = OrganicEL()
-        motion_sensor = MotionSensor()
+        organic_el = OrganicEL(PINS.organic_el)
+        motion_sensor = MotionSensor(PINS.motion_sensor)
         mode = "hiroyuki" if random.randint(0, 1) == 1 else "oka-san"
-        speaker = Speaker(AUDIO_PATH + mode)
+        speaker = Speaker(CONST.audio_path + mode)
         delivery = Delivery()
-        caterpillar_motor = Motor(CATERPILLAR_PORT)
-        right_arm_motor = Motor(RIGHT_ARM_PORT)
-        ultrasonic_sensor = UltrasonicSensor()
+        caterpillar_motor = Motor(PINS.caterpillar_port)
+        right_arm_motor = Motor(PINS.right_arm_port)
+        ultrasonic_sensor = UltrasonicSensor(PINS.ultrasonic_sensor.trigger, PINS.ultrasonic_sensor.echo)
         start_time = time.time()
         bad_posture_flag = 0
         continual_bad_posture_flag = 0
@@ -53,15 +35,15 @@ def main():
                     organic_el.on()
                     key_points = detect()
 
-                    if key_points["left_shoulder"][1] > LEFT_SHOULDER_X_LIMIT or key_points["right_shoulder"][1] < RIGHT_SHOULDER_X_LIMIT:
-                        speaker.play_audio(MOVE_AUDIO_FILE)
+                    if key_points["left_shoulder"][1] > CONST.left_shoulder_x_limit or key_points["right_shoulder"][1] < CONST.right_shoulder_x_limit:
+                        speaker.play_audio(CONST.move_audio_file)
                         time.sleep(10)
                         continue
 
-                    if key_points["left_eye"][0] < LEFT_ETE_Y_LIMIT or key_points["right_eye"][0] > RIGHT_ETE_Y_LIMIT or \
-                            key_points["left_shoulder"][0] > LEFT_SHOULDER_Y_LIMIT or key_points["right_shoulder"][0] > RIGHT_SHOULDER_Y_LIMIT:
-                        speaker.play_audio(BACK_AUDIO_FILE)
-                        caterpillar_motor.run_for_rotations(CATERPILLAR_BACK_ROTATION, CATERPILLAR_SPEED)
+                    if key_points["left_eye"][0] < CONST.left_ete_y_limit or key_points["right_eye"][0] > CONST.right_ete_y_limit or \
+                            key_points["left_shoulder"][0] > CONST.left_shoulder_y_limit or key_points["right_shoulder"][0] > CONST.right_shoulder_y_limit:
+                        speaker.play_audio(CONST.back_audio_file)
+                        caterpillar_motor.run_for_rotations(CONST.caterpillar_back_rotation, CONST.caterpillar_speed)
                         continue
 
                     nose2eye_y = abs(key_points["nose"][0] - key_points["left_eye"][0])
@@ -69,29 +51,29 @@ def main():
                             abs(key_points["left_shoulder"][0] - key_points["nose"][0]) < 2 * nose2eye_y or \
                             abs(key_points["left_hip"][0] - key_points["left_shoulder"][0]) < 4 * nose2eye_y:
                         bad_posture_flag += 1
-                        if bad_posture_flag > BAD_POSTURE_LIMIT:
-                            speaker.play_audio(POSTURE_ALERT_AUDIO_FILE)
+                        if bad_posture_flag > CONST.bad_posture_limit:
+                            speaker.play_audio(CONST.posture_alert_audio_file)
                             bad_posture_flag = 0
                             continual_bad_posture_flag += 1
-                            if continual_bad_posture_flag > BAD_POSTURE_LIMIT:
+                            if continual_bad_posture_flag > CONST.bad_posture_limit:
                                 run_time_start = time.time()
-                                while ultrasonic_sensor.read_distance() > PUNCH_DISTANCE:
-                                    caterpillar_motor.start(CATERPILLAR_SPEED)
+                                while ultrasonic_sensor.read_distance() > CONST.punch_distance:
+                                    caterpillar_motor.start(CONST.caterpillar_speed)
                                 caterpillar_motor.stop()
                                 run_time_end = time.time()
-                                for _ in range(PUNCH_TIME):
+                                for _ in range(CONST.punch_time):
                                     right_arm_motor.run_for_rotations(3, -100)
                                     right_arm_motor.run_for_rotations(2.5, 100)
                                 continual_bad_posture_flag = 0
-                                caterpillar_motor.run_for_seconds(run_time_start - run_time_end, CATERPILLAR_SPEED)
+                                caterpillar_motor.run_for_seconds(run_time_start - run_time_end, CONST.caterpillar_speed)
                                 continue
                             continue
                         continue
 
-                    if time.time() - start_time >= DELIVERY_INTERVAL:
-                        speaker.play_audio(TREAT_AUDIO_FILE)
+                    if time.time() - start_time >= CONST.delivery_interval:
+                        speaker.play_audio(CONST.treat_audio_file)
                         delivery.give()
-                        speaker.play_audio(ITEM_GET_AUDIO_FILE)
+                        speaker.play_audio(CONST.item_get_audio_file)
                         start_time = time.time()
                 else:
                     led.off()
