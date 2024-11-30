@@ -26,6 +26,7 @@
         },
         "organic_el": 2,
         "motion_sensor": 14,
+        "servo_motor": 18,
         "right_arm_port": "A",
         "caterpillar_port": "B",
         "ultrasonic_sensor": {
