@@ -6,6 +6,11 @@ from snack_delivery import Delivery, periodic_delivery
 from buildhat import Motor
 import threading
 import traceback
+import argparse
+
+argparser = argparse.ArgumentParser(description="Run the main program")
+argparser.add_argument("--verbose", action="store_true", help="Print debug messages")
+args = argparser.parse_args()
 
 SETTING = input_json("../config/setting.json")
 CONST, PINS = SETTING.constants, SETTING.pins
@@ -28,7 +33,7 @@ def main():
         # スレッドの作成
         threads = [
             threading.Thread(target=monitor_user, args=(ultrasonic_sensor, led, organic_el, shared_state)),
-            threading.Thread(target=posture_check, args=(shared_state, speaker, caterpillar_motor, right_arm_motor, ultrasonic_sensor, CONST)),
+            threading.Thread(target=posture_check, args=(shared_state, speaker, caterpillar_motor, right_arm_motor, ultrasonic_sensor, CONST, args.verbose)),
             threading.Thread(target=periodic_delivery, args=(shared_state, speaker, delivery, CONST)),
         ]
 
