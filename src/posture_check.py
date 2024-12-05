@@ -276,7 +276,7 @@ def detect(image_path=None, output_path=None):
 
 	return keypoints
 
-def posture_check(shared_state, speaker, caterpillar_motor, right_arm_motor, ultrasonic_sensor, const):
+def posture_check(shared_state, speaker, caterpillar_motor, right_arm_motor, ultrasonic_sensor, const, verbose=False):
   """Check the posture of the detected human and take action accordingly.
 
   Parameters
@@ -293,6 +293,8 @@ def posture_check(shared_state, speaker, caterpillar_motor, right_arm_motor, ult
       Ultrasonic sensor object.
   const : AttrDict
       Constants object.
+  verbose : bool, optional
+      Whether to print debug messages. The default is False.
   """
   bad_posture_flag = 0
   continual_bad_posture_flag = 0
@@ -303,14 +305,30 @@ def posture_check(shared_state, speaker, caterpillar_motor, right_arm_motor, ult
               continue
 
           key_points = detect()
+          if verbose:
+              print(key_points)
 
           if key_points["left_shoulder"][1] > const.left_shoulder_x_limit or key_points["right_shoulder"][1] < const.right_shoulder_x_limit:
             speaker.play_audio(const.move_audio_file)
+            if verbose:
+              if key_points["left_shoulder"][1] > const.left_shoulder_x_limit:
+                print("left shoulder is out of frame")
+              else:
+                print("right shoulder is out of frame")
             time.sleep(10)
             continue
 
           if key_points["left_eye"][0] < const.left_ete_y_limit or key_points["right_eye"][0] > const.right_ete_y_limit or \
             key_points["left_shoulder"][0] > const.left_shoulder_y_limit or key_points["right_shoulder"][0] > const.right_shoulder_y_limit:
+            if verbose:
+              if key_points["left_eye"][0] < const.left_ete_y_limit:
+                print("left eye is out of frame")
+              if key_points["right_eye"][0] > const.right_ete_y_limit:
+                print("right eye is out of frame")
+              if key_points["left_shoulder"][0] > const.left_shoulder_y_limit:
+                print("left shoulder is out of frame")
+              if key_points["right_shoulder"][0] > const.right_shoulder_y_limit:
+                print("right shoulder is out of frame")
             speaker.play_audio(const.back_audio_file)
             caterpillar_motor.run_for_rotations(const.caterpillar_back_rotation, const.caterpillar_speed)
             continue
@@ -320,10 +338,20 @@ def posture_check(shared_state, speaker, caterpillar_motor, right_arm_motor, ult
               abs(key_points["left_shoulder"][0] - key_points["nose"][0]) < 2 * nose2eye_y or \
               abs(key_points["left_hip"][0] - key_points["left_shoulder"][0]) < 4 * nose2eye_y:
             bad_posture_flag += 1
+            if verbose:
+              print(f"bad posture, flag={bad_posture_flag}")
+              if abs(key_points["left_shoulder"][0] - key_points["right_shoulder"][0]) > (2 * nose2eye_y):
+                print("shoulders are tilted")
+              if abs(key_points["left_shoulder"][0] - key_points["nose"][0]) < 2 * nose2eye_y:
+                print("shoulder is too close to face")
+              if abs(key_points["left_hip"][0] - key_points["left_shoulder"][0]) < 4 * nose2eye_y:
+                print("hip is too close to shoulder")
             if bad_posture_flag > const.bad_posture_limit:
               speaker.play_audio(const.posture_alert_audio_file)
               bad_posture_flag = 0
               continual_bad_posture_flag += 1
+              if verbose:
+                print(f"continual bad posture, flag={continual_bad_posture_flag}")
               if continual_bad_posture_flag > const.bad_posture_limit:
                 run_time_start = time.time()
                 while ultrasonic_sensor.read_distance() > const.punch_distance:
