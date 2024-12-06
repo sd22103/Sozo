@@ -29,7 +29,7 @@ class Delivery():
         self.servo_motor.set_angle(0)
         return
 
-def periodic_delivery(shared_state, speaker, delivery, const):
+def periodic_delivery(shared_state, speaker, delivery, const, verbose=False):
     """Periodically deliver snacks to the user.
 
     Parameters
@@ -50,11 +50,15 @@ def periodic_delivery(shared_state, speaker, delivery, const):
                 time.sleep(0.1)
                 continue
 
+            if verbose:
+                print(f"snack time={time.time()-start_time}")
+
             if time.time() - start_time >= const.delivery_interval:
                 speaker.play_audio(const.treat_audio_file)
                 delivery.give()
                 speaker.play_audio(const.item_get_audio_file)
                 start_time = time.time()
+                
 
         except Exception as e:
             print("Error in periodic_delivery (from periodic_delivery):", e)
