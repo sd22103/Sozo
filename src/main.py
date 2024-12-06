@@ -19,7 +19,6 @@ def main():
     try:
         print("初期化開始")
         led = LED()
-        organic_el = OrganicEL(PINS.organic_el)
         speaker = Speaker(CONST.audio_path)
         delivery = Delivery(PINS.servo_motor)
         caterpillar_motor = Motor(PINS.caterpillar_port)
@@ -32,7 +31,7 @@ def main():
 
         # スレッドの作成
         threads = [
-            threading.Thread(target=monitor_user, args=(ultrasonic_sensor, led, organic_el, shared_state)),
+            threading.Thread(target=monitor_user, args=(ultrasonic_sensor, led, shared_state)),
             threading.Thread(target=posture_check, args=(shared_state, speaker, caterpillar_motor, right_arm_motor, ultrasonic_sensor, CONST, args.verbose)),
             threading.Thread(target=periodic_delivery, args=(shared_state, speaker, delivery, CONST)),
         ]
@@ -53,7 +52,6 @@ def main():
     
     finally:
         if 'led' in locals(): led.off()
-        if 'organic_el' in locals(): organic_el.off()
         if 'caterpillar_motor' in locals(): caterpillar_motor.stop()
         if 'right_arm_motor' in locals(): right_arm_motor.stop()
 
