@@ -3,7 +3,7 @@ import RPi.GPIO as GPIO
 class LED():
     """LED control class
     """
-    def __init__(self, hub_num=2, port_num=2):
+    def __init__(self, hub_num=2):
         """Constructor
 
         Parameters
@@ -14,19 +14,18 @@ class LED():
             port number, by default 2
         """
         self.hub_num = hub_num
-        self.port_num = port_num
         return
 
     def on(self):
         """Turn on the LED
         """
-        os.system(f"sudo uhubctl -l {self.hub_num} -p {self.port_num} -a on")
+        os.system(f"sudo uhubctl -l {self.hub_num} -a on")
         return
 
     def off(self):
         """Turn off the LED
         """
-        os.system(f"sudo uhubctl -l {self.hub_num} -p {self.port_num} -a off")
+        os.system(f"sudo uhubctl -l {self.hub_num} -a off")
         return
 
     def blink(self, t=5):
