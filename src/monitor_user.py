@@ -39,10 +39,10 @@ def monitor_user(ultrasonic_sensor, led, speaker, shared_state, const, verbose=F
                 led_flag = 1
             else:
                 left_count += 1
-                if led_flag == 1:
-                    speaker.play_audio(const.finish_audio_file)
-                    led_flag = 0
                 if left_count > 5:
+                    if led_flag == 1:
+                        speaker.play_audio(const.finish_audio_file)
+                    led_flag = 0
                     shared_state["human_detected"] = False
                     led.off()
 
