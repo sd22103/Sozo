@@ -306,6 +306,7 @@ def posture_check(shared_state, speaker, caterpillar_motor, right_arm_motor, ult
               continue
           
           date = datetime.now().strftime("%Y%m%d_%H%M%S")
+          shared_state["bad_posture"] = False
           key_points = detect(output_path=f"./pictures/{date}.png") if verbose else detect()
           # if verbose:
           #     print(key_points)
