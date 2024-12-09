@@ -304,8 +304,9 @@ def posture_check(shared_state, speaker, caterpillar_motor, right_arm_motor, ult
           if not shared_state["human_detected"]:
               time.sleep(0.1)
               continue
-
-          key_points = detect(output_path=f"./pictures/{datetime.now().strftime("%Y%m%d_%H%M%S")}.png") if verbose else detect()
+          
+          date = datetime.now().strftime("%Y%m%d_%H%M%S")
+          key_points = detect(output_path=f"./pictures/{date}.png") if verbose else detect()
           # if verbose:
           #     print(key_points)
 
