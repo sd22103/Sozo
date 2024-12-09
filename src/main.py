@@ -20,7 +20,7 @@ CONST, PINS = SETTING.constants, SETTING.pins
 def main():
     try:
         print("初期化開始")
-        mode = "hiroyuki/" if random.randint(0, 10) == 0 else "oka-san/"
+        mode = random.choice(["hiroyuki/", "oka-san/"])
         if args.verbose:
             print(f"mode:{mode}")
         led = LED()
@@ -37,7 +37,7 @@ def main():
         # スレッドの作成
         threads = [
             threading.Thread(target=monitor_user, args=(ultrasonic_sensor, led, shared_state, args.verbose)),
-            # threading.Thread(target=posture_check, args=(shared_state, speaker, caterpillar_motor, right_arm_motor, ultrasonic_sensor, CONST, args.verbose)),
+            threading.Thread(target=posture_check, args=(shared_state, speaker, caterpillar_motor, right_arm_motor, ultrasonic_sensor, CONST, args.verbose)),
             threading.Thread(target=periodic_delivery, args=(shared_state, speaker, delivery, CONST, args.verbose))
         ]
 
