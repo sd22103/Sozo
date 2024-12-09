@@ -22,6 +22,7 @@ def monitor_user(ultrasonic_sensor, led, speaker, shared_state, const, verbose=F
     left_count = 0
     print("ユーザー検知開始")
     print(f"verbose:{verbose}")
+    led_flag = 0
     while True:
         try:
             if verbose:
