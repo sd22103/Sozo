@@ -4,6 +4,7 @@ from tensorflow_docs.vis import embed
 import numpy as np
 import cv2
 import time
+import traceback
 
 # Import matplotlib libraries
 from matplotlib import pyplot as plt
@@ -15,6 +16,7 @@ import imageio
 from IPython.display import HTML, display
 
 from utils.common_functions import Camera
+from datetime import datetime
 
 
 # Dictionary that maps from joint names to keypoint indices.
@@ -231,7 +233,15 @@ def movenet(input_image):
 	return keypoints_with_scores
 
 def detect(image_path=None, output_path=None):
-	# 入力画像を読み込む。
+	"""Detects keypoints on an image.
+
+  Args:
+      image_path: Path to the image.
+      output_path: Path to save the output image.
+
+  Returns:
+      A dictionary containing the detected keypoints.
+	"""
 	start = time.time()
 	if image_path:
 			image = tf.io.read_file(image_path)
@@ -267,4 +277,97 @@ def detect(image_path=None, output_path=None):
 
 	return keypoints
 
-# 0.95以内、信頼度0.5以上
+def posture_check(shared_state, speaker, caterpillar_motor, right_arm_motor, ultrasonic_sensor, const, verbose=False):
+  """Check the posture of the detected human and take action accordingly.
+
+  Parameters
+  ----------
+  shared_state : dict
+      Shared state between threads.
+  speaker : object of class Speaker
+      Speaker object.
+  caterpillar_motor : object of class Motor
+      Caterpillar motor object.
+  right_arm_motor : object of class Motor
+      Right arm motor object.
+  ultrasonic_sensor : object of class UltrasonicSensor
+      Ultrasonic sensor object.
+  const : AttrDict
+      Constants object.
+  verbose : bool, optional
+      Whether to print debug messages. The default is False.
+  """
+  bad_posture_flag = 0
+  continual_bad_posture_flag = 0
+  while True:
+      try:
+          if not shared_state["human_detected"]:
+              time.sleep(0.1)
+              continue
+          
+          date = datetime.now().strftime("%Y%m%d_%H%M%S")
+          shared_state["bad_posture"] = False
+          key_points = detect(output_path=f"./pictures/{date}.png") if verbose else detect()
+          # if verbose:
+          #     print(key_points)
+
+          if key_points["left_shoulder"][1] > const.left_shoulder_x_limit or key_points["right_shoulder"][1] < const.right_shoulder_x_limit:
+            speaker.play_audio(const.move_audio_file)
+            if verbose:
+              if key_points["left_shoulder"][1] > const.left_shoulder_x_limit:
+                print("left shoulder is out of frame")
+              else:
+                print("right shoulder is out of frame")
+            time.sleep(5)
+            continue
+
+          if key_points["left_eye"][0] < const.left_eye_y_limit or key_points["right_eye"][0] > const.right_eye_y_limit or \
+            key_points["left_shoulder"][0] < const.left_shoulder_y_limit or key_points["right_shoulder"][0] > const.right_shoulder_y_limit:
+            if verbose:
+              if key_points["left_eye"][0] < const.left_eye_y_limit:
+                print("left eye is out of frame")
+              if key_points["right_eye"][0] > const.right_eye_y_limit:
+                print("right eye is out of frame")
+              if key_points["left_shoulder"][0] < const.left_shoulder_y_limit:
+                print("left shoulder is out of frame")
+              if key_points["right_shoulder"][0] > const.right_shoulder_y_limit:
+                print("right shoulder is out of frame")
+            speaker.play_audio(const.back_audio_file)
+            caterpillar_motor.run_for_rotations(const.caterpillar_back_rotation, const.caterpillar_speed)
+            continue
+
+          nose2eye_y = abs(key_points["nose"][0] - key_points["left_eye"][0])
+          if abs(key_points["left_shoulder"][0] - key_points["right_shoulder"][0]) > (2 * nose2eye_y) or \
+              abs(key_points["left_shoulder"][0] - key_points["nose"][0]) < 2 * nose2eye_y or \
+              abs(key_points["left_hip"][0] - key_points["left_shoulder"][0]) < 4 * nose2eye_y:
+            bad_posture_flag += 1
+            shared_state["bad_posture"] = True
+            if verbose:
+              print(f"bad posture, flag={bad_posture_flag}")
+              if abs(key_points["left_shoulder"][0] - key_points["right_shoulder"][0]) > (2 * nose2eye_y):
+                print("shoulders are tilted")
+              if abs(key_points["left_shoulder"][0] - key_points["nose"][0]) < 2 * nose2eye_y:
+                print("shoulder is too close to face")
+              if abs(key_points["left_hip"][0] - key_points["left_shoulder"][0]) < 4 * nose2eye_y:
+                print("hip is too close to shoulder")
+            if bad_posture_flag > const.bad_posture_limit:
+              speaker.play_audio(const.posture_alert_audio_file)
+              bad_posture_flag = 0
+              continual_bad_posture_flag += 1
+              if verbose:
+                print(f"continual bad posture, flag={continual_bad_posture_flag}")
+              if continual_bad_posture_flag > const.bad_posture_limit:
+                caterpillar_motor.run_for_seconds(3, -const.caterpillar_speed)
+                for i in range(const.punch_time):
+                  if verbose:
+                     print(f"punch: {i}")
+                  right_arm_motor.run_for_rotations(3, -100)
+                  right_arm_motor.run_for_rotations(2.5, 100)
+                continual_bad_posture_flag = 0
+                caterpillar_motor.run_for_seconds(3, const.caterpillar_speed)
+
+      except Exception as e:
+          print("Error in posture_check (from posture_check):", e)
+          traceback.print_exc()
+
+      time.sleep(0.05)

@@ -3,7 +3,7 @@ import RPi.GPIO as GPIO
 class LED():
     """LED control class
     """
-    def __init__(self, hub_num="1-1"):
+    def __init__(self, hub_num=2):
         """Constructor
 
         Parameters

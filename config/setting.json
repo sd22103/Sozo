@@ -1,23 +1,25 @@
 {
     "constants": {
         "audio_path": "../audio/",
+        "start_audio_file": "start.wav",
         "move_audio_file": "move.wav",
         "back_audio_file": "back.wav",
         "posture_alert_audio_file": "posture_alert.wav",
         "treat_audio_file": "treat.wav",
         "item_get_audio_file": "item_get.mp3",
+        "finish_audio_file": "finish.wav",
         "left_shoulder_x_limit": 0.95,
         "left_shoulder_y_limit": 0.05,
         "right_shoulder_x_limit": 0.05,
         "right_shoulder_y_limit": 0.95,
-        "left_ete_y_limit": 0.15,
-        "right_ete_y_limit": 0.4,
+        "left_eye_y_limit": 0.05,
+        "right_eye_y_limit": 0.95,
         "caterpillar_back_rotation": 1,
         "caterpillar_speed": 100,
-        "bad_posture_limit": 3,
+        "bad_posture_limit": 2,
         "punch_distance": 30,
         "punch_time": 3,
-        "delivery_interval": 2400
+        "delivery_interval": 180
     },
     "pins": {
         "led": {
@@ -26,11 +28,12 @@
         },
         "organic_el": 2,
         "motion_sensor": 14,
+        "servo_motor": 18,
         "right_arm_port": "A",
         "caterpillar_port": "B",
         "ultrasonic_sensor": {
             "trigger": 27,
-            "echo": 18
+            "echo": 24
         }
     }
 }

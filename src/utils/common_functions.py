@@ -396,13 +396,7 @@ class ServoMotor():
         assert 0 <= angle <= 180, 'Angle must be between 0 and 180.'
         pulse_width = (angle / 180) * (2500 - 500) + 500
         self.pi.set_servo_pulsewidth(self.pin, pulse_width)
-
-    def __del__(self):
-        """Stop the servo motor and clean up the GPIO pins.
-        """
-        self.pi.set_servo_pulsewidth(self.pin, 0)
-        self.pi.stop()
-        return
+        
 
 def input_json(file_path):
     """Read a JSON
