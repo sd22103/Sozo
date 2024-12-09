@@ -340,6 +340,7 @@ def posture_check(shared_state, speaker, caterpillar_motor, right_arm_motor, ult
               abs(key_points["left_shoulder"][0] - key_points["nose"][0]) < 2 * nose2eye_y or \
               abs(key_points["left_hip"][0] - key_points["left_shoulder"][0]) < 4 * nose2eye_y:
             bad_posture_flag += 1
+            shared_state["bad_posture"] = True
             if verbose:
               print(f"bad posture, flag={bad_posture_flag}")
               if abs(key_points["left_shoulder"][0] - key_points["right_shoulder"][0]) > (2 * nose2eye_y):

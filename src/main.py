@@ -32,7 +32,7 @@ def main():
         print("初期化終了")
 
         # スレッド間で共有する状態
-        shared_state = {"human_detected": True}
+        shared_state = {"human_detected": False, "bad_posture": False}
 
         # スレッドの作成
         threads = [

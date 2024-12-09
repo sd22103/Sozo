@@ -53,7 +53,7 @@ def periodic_delivery(shared_state, speaker, delivery, const, verbose=False):
             if verbose:
                 print(f"snack time={round(time.time()-start_time, 3)}")
 
-            if time.time() - start_time >= const.delivery_interval:
+            if time.time() - start_time >= const.delivery_interval and not shared_state["bad_posture"]:
                 speaker.play_audio(const.treat_audio_file)
                 delivery.give()
                 speaker.play_audio(const.item_get_audio_file)
