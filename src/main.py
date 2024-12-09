@@ -7,19 +7,24 @@ from buildhat import Motor
 import threading
 import traceback
 import argparse
+import random
 
 argparser = argparse.ArgumentParser(description="Run the main program")
 argparser.add_argument("--verbose", action="store_true", help="Print debug messages")
 args = argparser.parse_args()
-
+if args.verbose:
+    print("verbose")
 SETTING = input_json("../config/setting.json")
 CONST, PINS = SETTING.constants, SETTING.pins
 
 def main():
     try:
         print("初期化開始")
+        mode = "hiroyuki/" if random.randint(0, 10) == 0 else "oka-san/"
+        if args.verbose:
+            print(f"mode:{mode}")
         led = LED()
-        speaker = Speaker(CONST.audio_path)
+        speaker = Speaker(CONST.audio_path+mode)
         delivery = Delivery(PINS.servo_motor)
         caterpillar_motor = Motor(PINS.caterpillar_port)
         right_arm_motor = Motor(PINS.right_arm_port)
@@ -27,13 +32,13 @@ def main():
         print("初期化終了")
 
         # スレッド間で共有する状態
-        shared_state = {"human_detected": False}
+        shared_state = {"human_detected": True}
 
         # スレッドの作成
         threads = [
-            threading.Thread(target=monitor_user, args=(ultrasonic_sensor, led, shared_state)),
-            threading.Thread(target=posture_check, args=(shared_state, speaker, caterpillar_motor, right_arm_motor, ultrasonic_sensor, CONST, args.verbose)),
-            threading.Thread(target=periodic_delivery, args=(shared_state, speaker, delivery, CONST)),
+            threading.Thread(target=monitor_user, args=(ultrasonic_sensor, led, shared_state, args.verbose)),
+            # threading.Thread(target=posture_check, args=(shared_state, speaker, caterpillar_motor, right_arm_motor, ultrasonic_sensor, CONST, args.verbose)),
+            threading.Thread(target=periodic_delivery, args=(shared_state, speaker, delivery, CONST, args.verbose))
         ]
 
         # スレッドを開始
