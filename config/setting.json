@@ -1,6 +1,6 @@
 {
     "constants": {
-        "audio_path": "../audio/",
+        "audio_path": "/home/sozo/program/Sozo/audio/",
         "start_audio_file": "start.wav",
         "move_audio_file": "move.wav",
         "back_audio_file": "back.wav",
