@@ -32,9 +32,9 @@ def monitor_user(ultrasonic_sensor, led, speaker, shared_state, const, verbose=F
                 print(f"distance={distance}cm")
             if distance < 150:
                 shared_state["human_detected"] = True
+                led.on()
                 if led_flag == 0:
                     speaker.play_audio(const.start_audio_file)
-                led.on()
                 left_count = 0
                 led_flag = 1
             else:
