@@ -16,6 +16,7 @@ import imageio
 from IPython.display import HTML, display
 
 from utils.common_functions import Camera
+from datetime import datetime
 
 
 # Dictionary that maps from joint names to keypoint indices.
@@ -304,7 +305,7 @@ def posture_check(shared_state, speaker, caterpillar_motor, right_arm_motor, ult
               time.sleep(0.1)
               continue
 
-          key_points = detect(output_path="./picture.png") if verbose else detect()
+          key_points = detect(output_path=f"./pictures/{datetime.now().strftime("%Y%m%d_%H%M%S")}.png") if verbose else detect()
           # if verbose:
           #     print(key_points)
 
