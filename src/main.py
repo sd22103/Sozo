@@ -14,7 +14,7 @@ argparser.add_argument("--verbose", action="store_true", help="Print debug messa
 args = argparser.parse_args()
 if args.verbose:
     print("verbose")
-SETTING = input_json("../config/setting.json")
+SETTING = input_json("/home/sozo/program/Sozo/config/setting.json")
 CONST, PINS = SETTING.constants, SETTING.pins
 
 def main():
