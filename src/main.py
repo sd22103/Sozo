@@ -36,7 +36,7 @@ def main():
 
         # スレッドの作成
         threads = [
-            threading.Thread(target=monitor_user, args=(ultrasonic_sensor, led, shared_state, args.verbose)),
+            threading.Thread(target=monitor_user, args=(ultrasonic_sensor, led, shared_state, CONST, args.verbose)),
             threading.Thread(target=posture_check, args=(shared_state, speaker, caterpillar_motor, right_arm_motor, ultrasonic_sensor, CONST, args.verbose)),
             threading.Thread(target=periodic_delivery, args=(shared_state, speaker, delivery, CONST, args.verbose))
         ]
