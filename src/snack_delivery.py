@@ -59,7 +59,10 @@ def periodic_delivery(shared_state, speaker, delivery, const, verbose=False):
                 speaker.play_audio(const.item_get_audio_file)
                 start_time = time.time()
                 
-
+        except KeyboardInterrupt:
+            print("ご褒美機能を終了します")
+            break
+        
         except Exception as e:
             print("Error in periodic_delivery (from periodic_delivery):", e)
             traceback.print_exc()

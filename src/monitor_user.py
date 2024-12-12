@@ -46,6 +46,10 @@ def monitor_user(ultrasonic_sensor, led, speaker, shared_state, const, verbose=F
                     shared_state["human_detected"] = False
                     led.off()
 
+        except KeyboardInterrupt:
+            print("ユーザーの監視を終了します")
+            break
+        
         except Exception as e:
             print("Error in monitor_motion (from monitor_user):", e)
             traceback.print_exc()

@@ -364,6 +364,10 @@ def posture_check(shared_state, speaker, caterpillar_motor, right_arm_motor, ult
                 continual_bad_posture_flag = 0
                 caterpillar_motor.run_for_seconds(3, const.caterpillar_speed)
 
+      except KeyboardInterrupt:
+         print("姿勢検知を終了します")
+         break
+      
       except Exception as e:
           print("Error in posture_check (from posture_check):", e)
           traceback.print_exc()
