@@ -61,7 +61,7 @@ def main():
         traceback.print_exc()
     
     finally:
-        time.sleep(2)
+        time.sleep(5)
         if 'led' in locals(): led.off()
         if 'caterpillar_motor' in locals(): caterpillar_motor.stop()
         if 'right_arm_motor' in locals(): right_arm_motor.stop()
