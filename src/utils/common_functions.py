@@ -10,6 +10,7 @@ from pydub.playback import play
 import pigpio
 import json
 from attrdict import AttrDict
+import sys
 
 class Camera():
     """Camera class to capture picture or video.
@@ -414,3 +415,12 @@ def input_json(file_path):
     with open(file_path, 'r') as f:
         data = json.load(f)
     return AttrDict(data)
+
+def quit_program():
+    """Exits the program when the user enters 'q'.
+    """
+    while True:
+        char = input()
+        if char == "q":
+            print("プログラムを終了します")
+            sys.exit()

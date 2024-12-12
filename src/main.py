@@ -1,4 +1,4 @@
-from utils.common_functions import Speaker, UltrasonicSensor, input_json
+from utils.common_functions import Speaker, UltrasonicSensor, input_json, quit_program
 from lightning_control import LED, OrganicEL
 from monitor_user import monitor_user
 from posture_check import posture_check
@@ -8,6 +8,7 @@ import threading
 import traceback
 import argparse
 import random
+import time
 
 argparser = argparse.ArgumentParser(description="Run the main program")
 argparser.add_argument("--verbose", action="store_true", help="Print debug messages")
@@ -41,9 +42,13 @@ def main():
             threading.Thread(target=periodic_delivery, args=(shared_state, speaker, delivery, CONST, args.verbose))
         ]
 
+        for thread in threads:
+            thread.daemon = True
+
         # スレッドを開始
         for thread in threads:
             thread.start()
+        quit_program()
 
         # スレッドを待機
         for thread in threads:
@@ -56,6 +61,7 @@ def main():
         traceback.print_exc()
     
     finally:
+        time.sleep(2)
         if 'led' in locals(): led.off()
         if 'caterpillar_motor' in locals(): caterpillar_motor.stop()
         if 'right_arm_motor' in locals(): right_arm_motor.stop()
