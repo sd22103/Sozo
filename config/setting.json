@@ -16,10 +16,10 @@
         "right_eye_y_limit": 0.95,
         "caterpillar_back_rotation": 1,
         "caterpillar_speed": 100,
-        "bad_posture_limit": 2,
+        "bad_posture_limit": 1,
         "punch_distance": 30,
         "punch_time": 3,
-        "delivery_interval": 180
+        "delivery_interval": 100
     },
     "pins": {
         "led": {
