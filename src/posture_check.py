@@ -305,7 +305,7 @@ def posture_check(shared_state, speaker, caterpillar_motor, right_arm_motor, ult
               continue
           
           shared_state["bad_posture"] = False
-          key_points = detect(output_path=f"/home/sozo/program/Sozo/src/output_img.png") if verbose else detect()
+          key_points = detect(output_path=f"/home/sozo/program/Sozo/img/output_img.png") if verbose else detect()
           # if verbose:
           #     print(key_points)
 
