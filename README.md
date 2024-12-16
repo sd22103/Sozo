@@ -1,5 +1,5 @@
-# おかあさんといっしょ(With OKA-SAN) - AI-driven study-assist lighting robot
-
+# おかあさんといっしょ(With OKA-SAN)<br>- AI-driven study-assist lighting robot
+![](img/OKA-SAN_image.png)
 ## Overview
 This product is an AI-powered study support lighting robot designed to enhance the efficiency and comfort of study sessions. It features user detection, posture monitoring, and a snack dispensing mechanism to reward sustained focus.
 
