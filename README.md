@@ -1,24 +1,30 @@
-# OKA-SAN (Tentative) - AI-Integrated Study Support Desk Lamp
+# おかあさんといっしょ(With OKA-SAN) - AI-driven study-assist lighting robot
 
-## Introduction
-**OKA-SAN** is a smart desk lamp designed to assist students during their study sessions by encouraging good posture, providing breaks, and ensuring focus. It runs on a Raspberry Pi embedded within the product.
+## Overview
+This product is an AI-powered study support lighting robot designed to enhance the efficiency and comfort of study sessions. It features user detection, posture monitoring, and a snack dispensing mechanism to reward sustained focus.
 
-### Features
+## Key Features
 
-1. **Posture Correction**: OKA-SAN detects when the user is slouching or sitting with poor posture and provides gentle reminders through audio and light punches to encourage better posture.
-2. **Wake-Up Alerts**: If the user falls asleep while studying, OKA-SAN will wake them up with sounds and light punches.
-3. **Snack Delivery**: During breaks, OKA-SAN offers a small snack to keep the user energized.
-4. **Auto On/Off Lighting**: OKA-SAN detects when the user approaches the desk and automatically turns on the light. When the user leaves, the light turns off.
+1. **User Detection**  
+OKA-SAN uses an ultrasonic sensor to detect when the user is in front of the device. Upon detection, it turns on the LED light and activates other features.
+2. **Posture Monitoring**  
+Using AI-based posture estimation from camera input, OKA-SAN monitors the user's posture. If poor posture is detected, it provides audio warnings. If the posture does not improve, the robot delivers a playful "punch" to encourage correction.
+3. **Snack Dispensing Mechanism**  
+After a specified study duration, OKA-SAN dispenses a snack from its left-hand mechanism as a reward for the user's dedication.
+
+### Flowchart
+The flowchart below illustrates the main processes of OKA-SAN, including user detection, posture correction, and snack dispensing.  Each component works in a loop to ensure real-time monitoring and feedback.
+
+![](img/flowchart.png)
 
 ## Installation
+```shell
+pip install tensorflow
+pip install --upgrade tensorflow-hub
+pip install numpy opencv-python matplotlib imageio ipython  pydub pigpio
 
-Since OKA-SAN runs on a pre-installed Raspberry Pi within the desk lamp, users do not need to manually install or configure the software. This repository is provided for reference only.
+pip install RPi.GPIO gpiozero
 
-## How It Works
+pip install smbus ipget
+```
 
-OKA-SAN uses a combination of sensors and cameras to monitor the user’s posture and behavior. The software processes input from these sensors or cameras to determine when to activate specific features like posture correction, wake-up alerts, and automatic lighting.
-
-1. **Posture Detection**: OKA-SAN detects the user's sitting position and assesses whether their posture is correct.
-2. **Motion Sensors**: Detect when the user approaches or leaves the desk.
-3. **Snack Dispenser Control**: A small motor system is used to deliver snacks during scheduled breaks.
-4. **Wake-Up System**: The software triggers alarms and mild physical prompts when the user appears to be sleeping.
