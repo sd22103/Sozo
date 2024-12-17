@@ -48,6 +48,7 @@ def periodic_delivery(shared_state, speaker, delivery, const, verbose=False):
         try:
             if not shared_state["human_detected"]:
                 time.sleep(0.1)
+                start_time = time.time()
                 continue
 
             if verbose:
